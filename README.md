@@ -2,11 +2,13 @@
 
 ## Dependencies
 
-- klayout 0.24.10
+- klayout 0.25.6
 
-- python 2.7.x
+- python 3.6.x
 
 - numpy
+
+- pandas
 
 ## Generators
 
