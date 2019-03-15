@@ -1,6 +1,6 @@
-./drc
-./macros
-./pymacros
-./python
-./ruby
-./layouts
+drc/*
+macros/*
+pymacros/*
+python/*
+ruby/*
+layouts/*
