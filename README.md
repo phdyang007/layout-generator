@@ -12,10 +12,12 @@
 
 ## Generators
 
+```mkdir -p layouts```
+
 - Uni-direction Metal Layer
 
-```make m2_test.oas'''
+```make m2_test.oas```
 
 - Via Layer
 
-```make via_test.oas'''
+```make via_test.oas```
