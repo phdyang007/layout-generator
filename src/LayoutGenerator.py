@@ -115,12 +115,11 @@ def split_args(arg_list, chunk):
 
 
 
-def draw_wire_column(cell, layer, cd, min_length, max_length, min_t2t, max_t2t, t2t_grid, max_y, location=np.array([0, 0])):
+def draw_wire_column(cell, layer, cd, min_length, max_length, min_t2t, max_t2t, t2t_grid, max_y, location=[0, 0]):
     offset_x = location[0]
     offset_y = location[1]
     total_x = 0
     total_y = 0
-    
     while total_y < max_y:
         wire_left   = total_x
         wire_lower  = total_y
@@ -136,7 +135,7 @@ def draw_wire_column(cell, layer, cd, min_length, max_length, min_t2t, max_t2t, 
 
         wire_upper  = wire_lower + wire_length
         wire_right  = wire_left + cd
-
+        #print(wire_left+offset_x,wire_lower+offset_y,wire_lower,wire_right)
         wire_ll = pya.Point(wire_left+offset_x, wire_lower+offset_y)
         wire_ur = pya.Point(wire_right+offset_x, wire_upper+offset_y)
         wire = pya.Box(wire_ll, wire_ur)

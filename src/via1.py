@@ -62,10 +62,10 @@ if __name__ == "__main__":
         min_via1_pitch_y = int(via1_spec.min_via1_pitch_y[i]/dbu)
         via_fraction = via1_spec.via_fraction[i]
 
-        x=((i) % max_duts_per_row)*(dut_pitch_x+total_x)
-        y=((i) / max_duts_per_row)*(dut_pitch_y+total_y)
-        origin = np.array([x,y], dtype = int)
-        description.append([via1_spec.cellname[i], x, y])
+        #x=((i) % max_duts_per_row)*(dut_pitch_x+total_x)
+        #y=((i) / max_duts_per_row)*(dut_pitch_y+total_y)
+        origin = [0,0]
+        #description.append([via1_spec.cellname[i], x, y])
 
        
         cellname = via1_spec.cellname[i]
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         via_xcnt =0
         for j in range(init_loc[0], total_x-m1_wire_cd + init_loc[0], m1_track_pitch):
             via_xcnt+=1
-            location = np.array([j, init_loc[1]])
+            location = [j, init_loc[1]]
             draw_wire_column(cell, l_m1, m1_wire_cd,
                             m1_min_length, m1_max_length,
                             m1_min_t2t, m1_max_t2t, m1_t2t_grid,
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         l_m2 = layout.layer(120, 0, "M3")
         for j in range(init_loc[1]+m1_enc, total_y-m2_wire_cd + init_loc[1], m2_track_pitch):
             via_ycnt+=1
-            location = np.array([init_loc[0], j])
+            location = [init_loc[0], j]
             draw_wire_row(cell, l_m2, m2_wire_cd,
                             m2_min_length, m2_max_length,
                             m2_min_t2t, m2_max_t2t, m2_t2t_grid,
@@ -117,8 +117,8 @@ if __name__ == "__main__":
         print (via_mtx.shape)
         while not via_iter.at_end():
             current = via_iter.shape().bbox()
-            v_x = (current.left-  init_loc[0])/m1_track_pitch
-            v_y = (current.bottom -   init_loc[1]-m1_enc)/ m2_track_pitch
+            v_x = (current.left-  init_loc[0])//m1_track_pitch
+            v_y = (current.bottom -   init_loc[1]-m1_enc)// m2_track_pitch
             if via_iter.shape().area() ==m1_wire_cd*m2_wire_cd:
                 th= rd.uniform(0,1)
                 if th>via_fraction:                 
@@ -133,8 +133,8 @@ if __name__ == "__main__":
         via_iter = layout.begin_shapes(cell, l_via1)
         while not via_iter.at_end():
             current = via_iter.shape().bbox()
-            v_x = (current.left-  init_loc[0])/m1_track_pitch
-            v_y = (current.bottom -   init_loc[1]-m1_enc)/ m2_track_pitch
+            v_x = (current.left-  init_loc[0])//m1_track_pitch
+            v_y = (current.bottom -   init_loc[1]-m1_enc)// m2_track_pitch
             if not check_via_pitch_pass(v_x, v_y, via_mtx, m1_track_pitch, m2_track_pitch, min_via_pitch_x=min_via1_pitch_x):
                 via_iter.shape().delete()
                 via_mtx[v_y, v_x] =0
@@ -143,8 +143,8 @@ if __name__ == "__main__":
         via_iter = layout.begin_shapes(cell, l_via1)
         while not via_iter.at_end():
             current = via_iter.shape().bbox()
-            v_x = (current.left-  init_loc[0])/m1_track_pitch
-            v_y = (current.bottom -   init_loc[1]-m1_enc)/ m2_track_pitch
+            v_x = (current.left-  init_loc[0])//m1_track_pitch
+            v_y = (current.bottom -   init_loc[1]-m1_enc)// m2_track_pitch
             if not check_via_pitch_pass(v_x, v_y, via_mtx, m1_track_pitch, m2_track_pitch, min_via_pitch_y=min_via1_pitch_y):
                 via_iter.shape().delete()
                 via_mtx[v_y, v_x] =0
@@ -161,4 +161,4 @@ if __name__ == "__main__":
         cell.write(os.path.join(dest, cellname+'.oas'))
 
 
-    topcell.write(outOAS)
+    #topcell.write(outOAS)
