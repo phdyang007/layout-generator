@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
        
         cellname = via1_spec.cellname[i]
-        cell = layout.create_cell(cellname)
+        cell = layout.create_cell('TOP')
         '''Generate M1 Gratings'''
         l_m1 = layout.layer(93, 0, "M1")
         init_loc = origin
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
         '''Generate M2'''
         via_ycnt=0
-        l_m2 = layout.layer(120, 0, "M3")
+        l_m2 = layout.layer(94, 0, "M2")
         for j in range(init_loc[1]+m1_enc, total_y-m2_wire_cd + init_loc[1], m2_track_pitch):
             via_ycnt+=1
             location = [init_loc[0], j]
@@ -150,15 +150,57 @@ if __name__ == "__main__":
                 via_mtx[v_y, v_x] =0
             via_iter.next()
         
-        '''Generater Bounding Box'''
-        l_bb = layout.layer(1, 0, "bounding_box")
-        bbll = pya.Point(origin[0], origin[1])
-        bbur = pya.Point(origin[0]+total_x, origin[1]+total_y)
-        cell.shapes(l_bb).insert(pya.Box(bbll, bbur))
-        tmp_cell_inst = pya.CellInstArray(cell.cell_index(), pya.Trans(pya.Point(0,0)))
-        topcell.insert(tmp_cell_inst)
-        layout.delete_layer(l_m2_ast)
-        cell.write(os.path.join(dest, cellname+'.oas'))
 
+        '''draw sraf forbidden and access region'''
+        l_forbidden = layout.layer(210, 0)
+        l_access    = layout.layer(230, 0)
+        offset_forbidden = pya.Vector(100, 100)
+        offset_access    = pya.Vector(500, 500)
+        via_iter = layout.begin_shapes(cell, l_via1)
+        while not via_iter.at_end():
+            current = via_iter.shape().bbox()
+            llp = current.p1 
+            urp = current.p2
+            llp_forbidden = llp-offset_forbidden
+            urp_forbidden = urp+offset_forbidden
+            cell.shapes(l_forbidden).insert(pya.Box(llp_forbidden, urp_forbidden))
+
+            llp_access = llp-offset_access
+            urp_access = urp+offset_access
+            cell.shapes(l_access).insert(pya.Box(llp_access, urp_access))
+
+            via_iter.next()
+        
+
+            
+            
+
+
+        '''Generater Bounding Box'''
+        l_bb = layout.layer(22, 0, "bounding_box")
+        cell.shapes(l_bb).insert(cell.bbox())
+        #bbll = pya.Point(origin[0], origin[1])
+        #bbur = pya.Point(origin[0]+total_x, origin[1]+total_y)
+        #cell.shapes(l_bb).insert(pya.Box(bbll, bbur))
+        #tmp_cell_inst = pya.CellInstArray(cell.cell_index(), pya.Trans(pya.Point(0,0)))
+        #topcell.insert(tmp_cell_inst)
+
+
+        '''merge boxes'''
+
+        l_forbidden_merged = layout.layer(21, 0)
+        l_access_merged    = layout.layer(23, 0)
+        #shapes_forbidden = cell.shapes(l_forbidden)
+        sp.merge(layout, cell, l_forbidden, cell.shapes(l_forbidden_merged), False, 0, False, False)
+        #cell.shapes(l_forbidden_merged).insert(shapes_forbidden_merged)
+
+
+        sp.merge(layout, cell, l_access, cell.shapes(l_access_merged), False, 0, False, False)
+
+        layout.delete_layer(l_m2_ast)
+        layout.delete_layer(l_forbidden)
+        layout.delete_layer(l_access)
+
+        cell.write(os.path.join(dest, cellname+'.gds'))
 
     #topcell.write(outOAS)
