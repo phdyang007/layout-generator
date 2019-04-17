@@ -202,5 +202,5 @@ if __name__ == "__main__":
         layout.delete_layer(l_access)
 
         cell.write(os.path.join(dest, cellname+'.gds'))
-
+        layout.clear()
     #topcell.write(outOAS)
