@@ -151,12 +151,13 @@ if __name__ == "__main__":
             via_iter.next()
         
 
-        '''draw sraf forbidden and access region'''
+        '''draw sraf forbidden and access region / store via/contact coordinates'''
         l_forbidden = layout.layer(210, 0)
         l_access    = layout.layer(230, 0)
         offset_forbidden = pya.Vector(100, 100)
         offset_access    = pya.Vector(500, 500)
         via_iter = layout.begin_shapes(cell, l_via1)
+        tmp_iter = 0
         while not via_iter.at_end():
             current = via_iter.shape().bbox()
             llp = current.p1 
@@ -169,8 +170,21 @@ if __name__ == "__main__":
             urp_access = urp+offset_access
             cell.shapes(l_access).insert(pya.Box(llp_access, urp_access))
 
+            center_x = round(current.center().x*dbu, 3)
+            center_y = round(current.center().y*dbu, 3)
+            center   = np.array([[center_x, center_y]])
+            if tmp_iter == 0:
+                centers  = center
+            else:
+                centers  = np.concatenate((centers, center), axis = 0)
+
             via_iter.next()
+            tmp_iter += 1
         
+
+        '''write out via coordinates'''
+        centers_df = pd.DataFrame(data = centers)
+        centers_df.to_csv(os.path.join(dest, cellname+'.txt'), sep=' ',header=False, index=False)
 
             
             
