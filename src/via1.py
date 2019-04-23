@@ -203,17 +203,23 @@ if __name__ == "__main__":
         '''merge boxes'''
 
         l_forbidden_merged = layout.layer(21, 0)
-        l_access_merged    = layout.layer(23, 0)
+        l_access_merged_w_forbidden    = layout.layer(231, 0)
+        l_access_merged  = layout.layer(23, 0)
         #shapes_forbidden = cell.shapes(l_forbidden)
         sp.merge(layout, cell, l_forbidden, cell.shapes(l_forbidden_merged), False, 0, False, False)
         #cell.shapes(l_forbidden_merged).insert(shapes_forbidden_merged)
 
 
-        sp.merge(layout, cell, l_access, cell.shapes(l_access_merged), False, 0, False, False)
+        sp.merge(layout, cell, l_access, cell.shapes(l_access_merged_w_forbidden), False, 0, False, False)
 
+
+        sp.boolean(layout, cell, l_access_merged_w_forbidden, layout, cell, l_forbidden_merged, cell.shapes(l_access_merged), pya.EdgeProcessor.ModeXor, False, False, False)
+        
+        '''remove assist layers'''
         layout.delete_layer(l_m2_ast)
         layout.delete_layer(l_forbidden)
         layout.delete_layer(l_access)
+        layout.delete_layer(l_access_merged_w_forbidden)
 
         cell.write(os.path.join(dest, cellname+'.gds'))
         layout.clear()
