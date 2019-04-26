@@ -3,6 +3,8 @@ macros/*
 pymacros/*
 python/*
 ruby/*
+tmp/*
+images/*
 layouts/*.txt
 layouts/*.gds
 layouts/*.oas
