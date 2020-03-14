@@ -9,3 +9,4 @@ layouts/*.txt
 layouts/*.gds
 layouts/*.oas
 src/__pycache__/*
+.vscode/*

@@ -13,6 +13,12 @@ via_%.oas: configs/via_%.csv ./src/via1.py
 	$(KLAYOUT) $(word 2,$+) -rd csv_file=$< -rd dest=./layouts -rd outOAS=$@ -rd outLayer=2/0
 	zip -r ./layouts/via.zip ./layouts
 
+m2_drc.gds: configs/m2_drcb_test.csv ./src/m2_drc.py
+	$(KLAYOUT) $(word 2,$+) -rd csv_file=$< -rd dest=./layouts -rd outOAS=$@ -rd outLayer=2/0
+	# generate conflict cells images
+	cd src && python gds2img.py ../layouts/ ../layouts/ 1
+	cd src && python gds2img.py ../layouts/ ../layouts/ 2
+	zip -r ./layouts/m2_drc.zip ./layouts 
 
 clean:
 	rm -rf layouts/*
