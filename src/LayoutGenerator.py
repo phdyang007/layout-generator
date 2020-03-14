@@ -2,7 +2,6 @@ import pya
 import numpy as np
 import random as rd
 import os
-from IPython import embed
 # All the units are listed/calculated in nanometer.
 '''
 Description: Draw a pair of contact, layer: 71, layer dtype: 0.

@@ -45,7 +45,6 @@ def gds2img(Infolder, Infile, ImgOut, cell_type=0):
     if token == 1:
         filename = Infile+str(dtype)+".png"
         outpath = os.path.join(ImgOut, filename)
-        # from IPython import embed;embed()
         im.save(outpath)
 
 

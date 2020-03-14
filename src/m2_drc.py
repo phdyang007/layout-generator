@@ -1,10 +1,9 @@
 import pya
 import sys
 sys.path.append('./src')
-from LayoutGenerator import *
-import pandas as pd
 import numpy as np
-from IPython import embed
+import pandas as pd
+from LayoutGenerator import *
 if __name__ == "__main__":
     params = ['cellname', 'wire_cd', 'track_pitch', 'min_t2t', 'max_t2t',
               'min_length', 'max_length', 't2t_grid', 'total_x', 'total_y']
@@ -18,6 +17,8 @@ if __name__ == "__main__":
         print("Error: Invalid csv file, columns must contain: ", params)
         quit()
     dbu = 1e-3
+    t2t_threshold = 0.4 # (max_t2t - min_t2t) * t2t_threshold
+    wirelength_threshold = 0.4 # (max_length - min_length) * wirelength_threshold
     try:
         verbose = int(verbose)
     except:
@@ -55,7 +56,7 @@ if __name__ == "__main__":
             draw_wire_row_drc(layout, outLayerNum, cell, l_m2, wire_cd,
                               min_length, max_length,
                               min_t2t, max_t2t, t2t_grid,
-                              total_x, location)
+                              total_x, location, t2t_threshold=t2t_threshold, wirelength_threshold=wirelength_threshold)
 
         l_bb = layout.layer(1, 0, "bounding_box")
         # print c1ur.x,c2ll.x
