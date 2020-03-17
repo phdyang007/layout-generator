@@ -144,7 +144,8 @@ def draw_wire_row_drc(layout, outLayerNum, cell, layer, cd, min_length, max_leng
         # TODO: two kind of violations
         # min_t2t<=0.016 smaller)/min_length(0.044 smaller)
         wire_conflict_layer = layout.layer(outLayerNum, 1, "M2")
-        if wire_length < int(wirelength_threshold * (max_length - min_length)):
+        #t2t 0.016, min_length 0.036
+        if wire_length < wirelength_threshold:
             conflict_wire = pya.Box(wire_ll, wire_ur)
             cell.shapes(wire_conflict_layer).insert(conflict_wire)
 
@@ -168,7 +169,8 @@ def draw_wire_row_drc(layout, outLayerNum, cell, layer, cd, min_length, max_leng
             break
 
         t2t_conflict_layer = layout.layer(outLayerNum, 2, "M2")
-        if t2t < int(t2t_threshold * (max_t2t - min_t2t)):
+        # from IPython import embed;embed()
+        if t2t < t2t_threshold:
             t2t_conflict_ll = pya.Point(
                 int(wire_right+offset_x), int(wire_lower+offset_y))
             t2t_conflict_ur = pya.Point(
@@ -450,16 +452,17 @@ class hilbert:
 
     def write_level(self, level, outOAS):
         if level == -1:
-            cellname = "level_"+str(self.level)
+            cellname = self.cell_prefix + "level_"+str(self.level)
         else:
-            cellname = "level_"+str(level)
+            cellname = self.cell_prefix + "level_"+str(level)
+        # from IPython import embed;embed()
         cell = self.layout.cell(cellname)
 
         cell.write(outOAS)
 
 
 class peano:
-    def __init__(self, layout, layer_num, layer_dt, length, cd, ptype):
+    def __init__(self, layout, layer_num, layer_dt, length, cd, ptype, cell_prefix="peano"):
         self.length = length
         self.cd = cd
         self.level = 0
@@ -470,6 +473,7 @@ class peano:
         self.cell = layout.create_cell("level_0")
         self.layer = self.layout.layer(self.layer_num, self.layer_dt)
         self.ptype = ptype
+        self.cell_prefix = cell_prefix
         self.draw_init(self.ptype)
     """
     PEANO TYPE=1
@@ -502,7 +506,7 @@ class peano:
 
     def next_level(self):
         self.level += 1
-        print("Drawing Hilbert Level %g" % self.level)
+        print("Drawing Peano Level %g" % self.level)
         newcell = self.layout.create_cell("level_"+str(self.level))
 
         # translation class transforms based on Rotation, Mirror, X, Y -- 4 item list
@@ -570,9 +574,9 @@ class peano:
 
     def write_level(self, level, outOAS):
         if level == -1:
-            cellname = "level_"+str(self.level)
+            cellname = self.cell_prefix + "level_"+str(self.level)
         else:
-            cellname = "level_"+str(level)
+            cellname = self.cell_prefix + "level_"+str(level)
         cell = self.layout.cell(cellname)
 
         cell.write(outOAS)

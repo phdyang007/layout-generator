@@ -17,8 +17,8 @@ if __name__ == "__main__":
         print("Error: Invalid csv file, columns must contain: ", params)
         quit()
     dbu = 1e-3
-    t2t_threshold = 0.4 # (max_t2t - min_t2t) * t2t_threshold
-    wirelength_threshold = 0.4 # (max_length - min_length) * wirelength_threshold
+    t2t_threshold = 0.013 / dbu # (max_t2t - min_t2t) * t2t_threshold
+    wirelength_threshold = 0.036 / dbu # (max_length - min_length) * wirelength_threshold
     try:
         verbose = int(verbose)
     except:
