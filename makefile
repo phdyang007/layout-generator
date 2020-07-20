@@ -26,5 +26,10 @@ hilbert_test: configs/hilbert_test.csv ./src/hilbert.py
 peano_test: configs/peano_test.csv ./src/peano.py
 	$(KLAYOUT) $(word 2,$+) -rd csv_file=$< -rd dest=./layouts -rd outOAS=$@ -rd outLayer=2/0
 
+
+m2_ww.oas: configs/m2_ww.csv configs/m2_ww_drc.csv ./src/m2.py
+	mkdir -p layouts
+	$(KLAYOUT) $(word 3,$+) -rd csv_file=$< -rd drc_file=$(word 2,$+) -rd dest=./layouts -rd outOAS=$@ -rd outLayer=1/0
+
 clean:
 	rm -rf layouts/*

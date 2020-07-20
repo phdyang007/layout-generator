@@ -1,0 +1,5 @@
+item	value 	values	pmin	wmax	lmax
+w.1	0.03						
+s.1	0.09		-0.15		
+s.2	0.15	"0.09,0.1"	-0.16	0.035	
+l.1	0.2				0.15

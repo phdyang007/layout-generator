@@ -580,3 +580,82 @@ class peano:
         cell = self.layout.cell(cellname)
 
         cell.write(outOAS)
+
+
+
+class track:
+    def __init__(self, cd):
+        self.rec_num = 0
+        self.cd = cd
+        self.rec_list = []
+        self.geo_or_space = []
+
+    def append(self, ll_x, ll_y, ur_x, ur_y, is_geo):
+        self.rec_list.append([ll_x, ll_y, ur_x, ur_y])
+        self.geo_or_space.append(is_geo)
+        self.rec_num += 1
+    
+
+def get_max_proj(track1, track2):
+    #TODO ziyang
+    return proj
+
+
+def draw_wire_track(cell, layer, min_cd, max_cd, min_length, max_length, min_t2t, max_t2t, t2t_grid, max_x, location=np.array([0, 0]), enclosure=0):
+    cd = rd.randint(min_cd, max_cd)
+    track_obj=track(cd) #init track class
+
+    
+    offset_x = location[0]
+    offset_y = location[1]
+    total_x = 0
+    total_y = 0
+    if enclosure != 0:
+        tmp_layout = cell.layout()
+        ast_layer = tmp_layout.layer(10010, 0, "ast")
+    while total_x < max_x:
+        wire_left = total_x
+        wire_lower = total_y
+        # print min_length, max_length, max_x
+        try:
+            tmp = min(max_length, max_x - wire_left)
+            wire_length = rd.randint(min_length, tmp)
+            # print "wire length", wire_length
+        except:
+            # print "escape wire"
+            break
+
+        wire_right = wire_left + wire_length
+        wire_upper = wire_lower + cd
+        # if wire_right > max_x:
+        #    break
+        
+        wire_ll = pya.Point(int(wire_left+offset_x), int(wire_lower+offset_y))
+        wire_ur = pya.Point(int(wire_right+offset_x), int(wire_upper+offset_y))
+        track_obj.append(wire_ll.x, wire_ll.y, wire_ur.x, wire_ur.y, 1) 
+        wire = pya.Box(wire_ll, wire_ur)
+        cell.shapes(layer).insert(wire)
+        if enclosure != 0:
+            ast_wire_ll = pya.Point(
+                wire_left+offset_x+enclosure, wire_lower+offset_y)
+            ast_wire_ur = pya.Point(
+                wire_right+offset_x-enclosure, wire_upper+offset_y)
+            ast_wire = pya.Box(ast_wire_ll, ast_wire_ur)
+            cell.shapes(ast_layer).insert(ast_wire)
+        try:
+            if max_t2t > min_t2t:
+                tmp = min(max_t2t, max_x - wire_right)
+                # print min_t2t, tmp, t2t_grid
+                t2t = rd.randrange(min_t2t, tmp, t2t_grid)
+                # print "t2t", t2t
+            else:
+                t2t = max_t2t
+            track_obj.append(wire_ur.x, wire_ur.y-cd, wire_ur.x+t2t, wire_ur.y, 0)
+        except:
+            # print "escape t2t"
+            break
+            track_obj.append(wire_ur.x, wire_ur.y-cd, wire_ur.x+max_x-wire_right, wire_ur.y, 0)
+        # print total_x, max_x, max_length, wire_left
+        total_x = total_x + wire_length + t2t
+        
+    return track_obj
