@@ -4,9 +4,9 @@ import os
 from PIL import Image, ImageDraw
 from progress.bar import Bar
 clipsize = 2000
+import numpy as np
 
-
-def gds2img(Infolder, Infile, ImgOut, cell_type=0):
+def gds2img(Infolder, Infile, ImgOut, layerSpecs):
     GdsIn = os.path.join(Infolder, Infile)
     gdsii = gdspy.GdsLibrary(unit=1e-9)
     gdsii.read_gds(GdsIn, units='convert')
@@ -19,15 +19,16 @@ def gds2img(Infolder, Infile, ImgOut, cell_type=0):
     w_offset = int(bbox[0, 0] - (clipsize-width)/2)
     h_offset = int(bbox[0, 1] - (clipsize-height)/2)
 
-    sellayer = [2]  # Layer Number
-    dtype = cell_type  # Layout Data Type
+
+    sellayer = layerSpecs[0]  # Layer Number
+    dtype = layerSpecs[1]  # Layout Data Type
     polygon = []
     im = Image.new('1', (clipsize, clipsize))
     draw = ImageDraw.Draw(im)
     token = 1
     for i in range(len(sellayer)):
         try:
-            polyset = cell.get_polygons(by_spec=True)[(sellayer[i], dtype)]
+            polyset = cell.get_polygons(by_spec=True)[(sellayer[i], dtype[i])]
         except:
             token = 0
             print("Layer not found, skipping...")
@@ -50,13 +51,15 @@ def gds2img(Infolder, Infile, ImgOut, cell_type=0):
 
 Infolder = sys.argv[1]
 Outfolder = sys.argv[2]
-cell_type = int(sys.argv[3])
+#cell_type = int(sys.argv[3])
 
+layerSpecs=np.array([[0,1,2],[0,0,0]]) #mask
+#layerSpecs=np.array([[200],[0]]) #nominal
 for dirname, dirnames, filenames in os.walk(Infolder):
     bar = Bar("Converting GDSII to Image", max=len(filenames))
     for f in range(0, len(filenames)):
         try:
-            gds2img(Infolder, filenames[f], Outfolder, cell_type)
+            gds2img(Infolder, filenames[f], Outfolder, layerSpecs)
         except:
             bar.next()
             continue
