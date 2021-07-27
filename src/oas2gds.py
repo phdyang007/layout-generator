@@ -1,5 +1,7 @@
 import pya 
-
+import sys
+import os
+from progress.bar import Bar
 
 
 def oas2gds(oas):
@@ -18,17 +20,17 @@ def gds2oas(gds):
 
 
 
-def main():
-    mode=int(mode)
-    for dirname, dirnames, filenames in os.walk(infolder):
-        bar = Bar("Converting OASIS <-> GDSII", max=len(filenames))
-        for f in range(0, len(filenames)):
-            filename = os.path.join(infolder, filenames[f])
-            if(mode==1):
-                oas2gds(filename)
-            if(mode==2):
-                gds2oas(filename)
-            bar.next()
-        bar.finish()
+
+mode=int(mode)
+for dirname, dirnames, filenames in os.walk(infolder):
+    bar = Bar("Converting OASIS <-> GDSII", max=len(filenames))
+    for f in range(0, len(filenames)):
+        filename = os.path.join(infolder, filenames[f])
+        if(mode==1):
+            oas2gds(filename)
+        if(mode==2):
+            gds2oas(filename)
+        bar.next()
+    bar.finish()
 
 
