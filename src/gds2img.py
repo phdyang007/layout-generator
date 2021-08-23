@@ -14,10 +14,13 @@ def gds2img(Infolder, Infile, ImgOut, layerSpecs):
     bbox = cell.get_bounding_box()
     opt_space = 40  # Leave space at border in case of edge correction
 
-    width = int((bbox[1, 0]-bbox[0, 0]))
-    height = int((bbox[1, 1]-bbox[0, 1]))
-    w_offset = int(bbox[0, 0] - (clipsize-width)/2)
-    h_offset = int(bbox[0, 1] - (clipsize-height)/2)
+    bbox2s = cell.get_polygons(by_spec=True)[(600, 0)][0]
+
+
+    width = int((bbox2s[2, 0]-bbox2s[0, 0]))
+    height = int((bbox2s[2, 1]-bbox2s[0, 1]))
+    w_offset = int(bbox2s[0, 0] - (clipsize-width)/2)
+    h_offset = int(bbox2s[0, 1] - (clipsize-height)/2)
 
 
     sellayer = layerSpecs[0]  # Layer Number
@@ -44,7 +47,7 @@ def gds2img(Infolder, Infile, ImgOut, layerSpecs):
             tmp = tuple(map(tuple, polyset[j]))
             draw.polygon(tmp, fill=255)
     if token == 1:
-        filename = Infile+str(dtype)+".png"
+        filename = Infile+".png"
         outpath = os.path.join(ImgOut, filename)
         im.save(outpath)
 
@@ -53,8 +56,10 @@ Infolder = sys.argv[1]
 Outfolder = sys.argv[2]
 #cell_type = int(sys.argv[3])
 
-layerSpecs=np.array([[0,1,2],[0,0,0]]) #mask
-#layerSpecs=np.array([[200],[0]]) #nominal
+#layerSpecs=np.array([[0,1,2],[0,0,0]]) #opc + sraf
+#layerSpecs=np.array([[0,1],[0,0]]) #opc
+#layerSpecs=np.array([[2],[0]]) #sraf
+layerSpecs=np.array([[200],[0]]) #nominal
 for dirname, dirnames, filenames in os.walk(Infolder):
     bar = Bar("Converting GDSII to Image", max=len(filenames))
     for f in range(0, len(filenames)):
