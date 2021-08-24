@@ -659,3 +659,45 @@ def draw_wire_track(cell, layer, min_cd, max_cd, min_length, max_length, min_t2t
         total_x = total_x + wire_length + t2t
         
     return track_obj
+
+
+#for ispd 
+#0 1 200   design and mask
+#2 sraf
+def extract_shapes(layout, center, target_cell, out_cell):
+    sp = pya.ShapeProcessor()
+    #all_layers = layout.layer_indexes()
+    layer_sraf = layout.layer(2,0)
+    layer_design = layout.layer(0,0)
+    layer_opc = layout.layer(1,0)
+    layer_contour = layout.layer(200,0)
+    design_layers = [layer_design, layer_opc, layer_contour]
+    tmp_cell   = layout.create_cell("tmp")
+    bbox = pya.Box((center[0]-1)/layout.dbu, (center[1]-1)/layout.dbu,(center[0]+1)/layout.dbu, (center[1]+1)/layout.dbu)
+    bbox2= pya.Box((center[0]-0.5)/layout.dbu, (center[1]-0.5)/layout.dbu,(center[0]+0.5)/layout.dbu, (center[1]+0.5)/layout.dbu)
+    tmp_cell.shapes(layer_sraf).insert(bbox)
+    tmp_cell.shapes(layer_design).insert(bbox)
+    tmp_cell.shapes(layer_opc).insert(bbox)
+    tmp_cell.shapes(layer_contour).insert(bbox)
+
+    sp.boolean(layout, tmp_cell, layer_sraf, layout, target_cell, layer_sraf, out_cell.shapes(layer_sraf), pya.EdgeProcessor.ModeAnd, True, False, False)
+    sp.boolean(layout, tmp_cell, layer_design, layout, target_cell, layer_design, out_cell.shapes(layer_design), pya.EdgeProcessor.ModeAnd, True, False, False)
+    sp.boolean(layout, tmp_cell, layer_opc, layout, target_cell, layer_opc, out_cell.shapes(layer_opc), pya.EdgeProcessor.ModeAnd, True, False, False)
+    sp.boolean(layout, tmp_cell, layer_contour, layout, target_cell, layer_contour, out_cell.shapes(layer_contour), pya.EdgeProcessor.ModeAnd, True, False, False)
+    print("Done Boolean")
+    opc_iter = layout.begin_shapes(out_cell, layer_opc)
+    while not opc_iter.at_end():
+        current = opc_iter.shape().bbox()
+        if not current.touches(bbox2):
+            opc_iter.shape().delete()
+        opc_iter.next()
+    print("Remove Out OPC")
+    contour_iter = layout.begin_shapes(out_cell, layer_contour)
+    opc_box = out_cell.bbox_per_layer(layer_opc)
+    while not contour_iter.at_end():
+        current = contour_iter.shape().bbox()
+        if not current.touches(opc_box):
+            contour_iter.shape().delete() 
+        contour_iter.next()
+    print("Remove Out Contour")
+    return out_cell
