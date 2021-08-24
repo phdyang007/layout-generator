@@ -664,7 +664,13 @@ def draw_wire_track(cell, layer, min_cd, max_cd, min_length, max_length, min_t2t
 #for ispd 
 #0 1 200   design and mask
 #2 sraf
-def extract_shapes(layout, center, target_cell, out_cell):
+
+
+
+
+def extract_shapes(layout, center, target_cell, cell_name):
+    print("generate cell %s !"%cell_name)
+    out_cell=layout.create_cell(cell_name)
     sp = pya.ShapeProcessor()
     #all_layers = layout.layer_indexes()
     layer_sraf = layout.layer(2,0)
