@@ -26,6 +26,3 @@ if __name__ == "__main__":
     
 
 
-def extract_shapes_mp(arg):
-    cell = extract_shapes(arg[0], arg[1], arg[2], arg[3])
-    cell.write(os.path.join("./gds/%s.gds"%arg[3]))

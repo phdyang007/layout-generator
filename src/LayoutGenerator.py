@@ -666,7 +666,9 @@ def draw_wire_track(cell, layer, min_cd, max_cd, min_length, max_length, min_t2t
 #2 sraf
 
 
-
+def extract_shapes_mp(arg):
+    cell = extract_shapes(arg[0], arg[1], arg[2], arg[3])
+    cell.write(os.path.join("./gds/%s.gds"%arg[3]))
 
 def extract_shapes(layout, center, target_cell, cell_name):
     print("generate cell %s !"%cell_name)
