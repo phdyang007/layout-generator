@@ -700,4 +700,5 @@ def extract_shapes(layout, center, target_cell, out_cell):
             contour_iter.shape().delete() 
         contour_iter.next()
     print("Remove Out Contour")
+    out_cell.shapes(layout.layer(7777,0)).insert(bbox)
     return out_cell
