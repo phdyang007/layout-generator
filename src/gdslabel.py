@@ -7,12 +7,13 @@ from progress.bar import Bar
 
 layout = pya.Layout()
 layout.read(gdsIn)
-cell = layout.cell('TOPCELL')
+#layout.dbu=1e-3
+cell = layout.cell('TOP_CELL')
 
-markerLayerIdx = layout.layer(10000,0)
-layout.delete_layer(markerLayerIdx)
+#markerLayerIdx = layout.layer(10086,0)
+#layout.delete_layer(markerLayerIdx)
 
-markerLayerIdx=layout.layer(10000,0)
+markerLayerIdx=layout.layer(10086,0)
 
 
 cellBbox = cell.bbox()
@@ -23,11 +24,11 @@ cellBottom = cellBbox.bottom
 cellRight = cellBbox.right
 cellTop = cellBbox.top 
 clipSize = 2000 
-clipPitch = clipSize/2
-markerSize = 16
+clipPitch = int(0.5/layout.dbu)
+markerSize = int(0.016/layout.dbu)
 
-for markerX in xrange(cellLeft, cellRight, clipPitch):
-    for markerY in xrange(cellBottom, cellTop, clipPitch):
+for markerX in range(cellLeft, cellRight, clipPitch):
+    for markerY in range(cellBottom, cellTop, clipPitch):
         markerLeft = markerX
         markerRight = markerLeft + markerSize
         markerBottom = markerY

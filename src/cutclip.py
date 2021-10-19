@@ -8,9 +8,10 @@ import multiprocessing as mp
 
 def manump(group_id):
     layout = pya.Layout()
-    layout.read("./ispd19_test.gds")
+    layout.read(gdsIn)
+    dbu=layout.dbu
     top_cell = layout.top_cell()
-    centers = np.loadtxt("./centers.txt")
+    centers = np.loadtxt("%s.txt"%gdsIn)*dbu
     total = len(centers)
     num_threads = 8
     try:
@@ -20,10 +21,10 @@ def manump(group_id):
     #for i in range(2):
     for i in range(len(parts)):
         print("generate cell %g/%g/%g !"%(group_id, i,len(parts)))
-        out_cell=layout.create_cell("via%g"%i)
-        out_cell=extract_shapes(layout, parts[i], top_cell, out_cell)
+        out_cell=layout.create_cell("clip%g"%i)
+        out_cell=extract_shapes2(layout, parts[i], top_cell, out_cell)
 
-        out_cell.write("./gds/via%g-%g.gds"%(group_id,i))
+        out_cell.write("./%s/clip%g-%g.gds"%(folder,group_id,i))
 
 
 if __name__ == "__main__":
