@@ -674,6 +674,7 @@ def extract_shapes(layout, center, target_cell, out_cell):
     layer_design = layout.layer(0,0)
     layer_opc = layout.layer(1,0)
     layer_contour = layout.layer(200,0)
+    
     design_layers = [layer_design, layer_opc, layer_contour]
     tmp_cell   = layout.create_cell("tmp")
     bbox = pya.Box((center[0]-1)/layout.dbu, (center[1]-1)/layout.dbu,(center[0]+1)/layout.dbu, (center[1]+1)/layout.dbu)
@@ -740,3 +741,28 @@ class shape_enumerator:
 
 
 
+def extract_shapes2(layout, center, target_cell, out_cell):
+    sp = pya.ShapeProcessor()
+    #all_layers = layout.layer_indexes()
+    layer_sraf = layout.layer(2,1)
+    layer_design = layout.layer(0,0)
+    layer_opc = layout.layer(2,0)
+    layer_contour = layout.layer(55,55)
+    
+    design_layers = [layer_design, layer_opc, layer_contour]
+    tmp_cell   = layout.create_cell("tmp")
+    bbox = pya.Box((center[0]-1)/layout.dbu, (center[1]-1)/layout.dbu,(center[0]+1)/layout.dbu, (center[1]+1)/layout.dbu)
+    bbox2= pya.Box((center[0]-0.5)/layout.dbu, (center[1]-0.5)/layout.dbu,(center[0]+0.5)/layout.dbu, (center[1]+0.5)/layout.dbu)
+    tmp_cell.shapes(layer_sraf).insert(bbox)
+    tmp_cell.shapes(layer_design).insert(bbox)
+    tmp_cell.shapes(layer_opc).insert(bbox)
+    tmp_cell.shapes(layer_contour).insert(bbox)
+
+    sp.boolean(layout, tmp_cell, layer_sraf, layout, target_cell, layer_sraf, out_cell.shapes(layer_sraf), pya.EdgeProcessor.ModeAnd, True, False, False)
+    sp.boolean(layout, tmp_cell, layer_design, layout, target_cell, layer_design, out_cell.shapes(layer_design), pya.EdgeProcessor.ModeAnd, True, False, False)
+    sp.boolean(layout, tmp_cell, layer_opc, layout, target_cell, layer_opc, out_cell.shapes(layer_opc), pya.EdgeProcessor.ModeAnd, True, False, False)
+    sp.boolean(layout, tmp_cell, layer_contour, layout, target_cell, layer_contour, out_cell.shapes(layer_contour), pya.EdgeProcessor.ModeAnd, True, False, False)
+    print("Done Boolean")
+
+    out_cell.shapes(layout.layer(7777,0)).insert(bbox)
+    return out_cell
