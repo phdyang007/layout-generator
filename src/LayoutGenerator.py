@@ -1,4 +1,7 @@
-import pya
+try:
+    import pya
+except:
+    print("klayout module not enabled")
 import numpy as np
 import random as rd
 import os
@@ -702,3 +705,38 @@ def extract_shapes(layout, center, target_cell, out_cell):
     print("Remove Out Contour")
     out_cell.shapes(layout.layer(7777,0)).insert(bbox)
     return out_cell
+
+
+
+#import gdstk
+
+class shape_enumerator:
+    def __init__(self, glp_path, shape_level=1, region = 1000, search_step = 10):
+        self.glp_path=glp_path
+        self.shape_level=shape_level
+        self.region=region
+        self.shape_lib = []
+        self.layer_dtype={
+            "mask": {"layer":1, "datatype": 0},
+            "contour": {"layer":2, "datatype": 0},
+            "design": {"layer":3, "datatype": 0},
+        }
+    def _klayout_polygon(self, glp_string):
+        tmp_points=[]
+        info = glp_string.split(" ")
+
+    def _klayout_rectangle(self, glp_string):
+        tmp_points=[]
+        info = glp_string.split(" ")
+    def get_shape_lib(self):
+        for dirname, dirnames, filenames in os.walk(self.glp_path):
+            #bar = Bar("Converting GDSII to Image", max=len(filenames))
+            for i in range(0, len(filenames)):
+                with open(os.path.join(dirname, filenames[i]),"r") as f:
+                    for line in f:
+                        if line.startwith("   RECT"):
+                            print(line.split())
+        
+
+
+

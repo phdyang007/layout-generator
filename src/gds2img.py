@@ -3,7 +3,7 @@ import sys
 import os
 from PIL import Image, ImageDraw
 from progress.bar import Bar
-clipsize = 2000
+clipsize = 4000
 import numpy as np
 
 def gds2img(Infolder, Infile, ImgOut, layerSpecs):
@@ -14,7 +14,7 @@ def gds2img(Infolder, Infile, ImgOut, layerSpecs):
     bbox = cell.get_bounding_box()
     opt_space = 40  # Leave space at border in case of edge correction
 
-    bbox2s = cell.get_polygons(by_spec=True)[(600, 0)][0]
+    bbox2s = cell.get_polygons(by_spec=True)[(7777, 0)][0]
 
 
     width = int((bbox2s[2, 0]-bbox2s[0, 0]))
@@ -56,10 +56,11 @@ Infolder = sys.argv[1]
 Outfolder = sys.argv[2]
 #cell_type = int(sys.argv[3])
 
-#layerSpecs=np.array([[0,1,2],[0,0,0]]) #opc + sraf
-#layerSpecs=np.array([[0,1],[0,0]]) #opc
+layerSpecs=np.array([[2,2],[0,1]]) #opc + sraf
+#layerSpecs=np.array([[55],[55]]) #opc + sraf
+#layerSpecs=np.array([[0,1]]) #opc
 #layerSpecs=np.array([[2],[0]]) #sraf
-layerSpecs=np.array([[200],[0]]) #nominal
+#layerSpecs=np.array([[200],[0]]) #nominal
 for dirname, dirnames, filenames in os.walk(Infolder):
     bar = Bar("Converting GDSII to Image", max=len(filenames))
     for f in range(0, len(filenames)):
