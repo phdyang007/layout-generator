@@ -708,39 +708,6 @@ def extract_shapes(layout, center, target_cell, out_cell):
     return out_cell
 
 
-
-#import gdstk
-
-class shape_enumerator:
-    def __init__(self, glp_path, shape_level=1, region = 1000, search_step = 10):
-        self.glp_path=glp_path
-        self.shape_level=shape_level
-        self.region=region
-        self.shape_lib = []
-        self.layer_dtype={
-            "mask": {"layer":1, "datatype": 0},
-            "contour": {"layer":2, "datatype": 0},
-            "design": {"layer":3, "datatype": 0},
-        }
-    def _klayout_polygon(self, glp_string):
-        tmp_points=[]
-        info = glp_string.split(" ")
-
-    def _klayout_rectangle(self, glp_string):
-        tmp_points=[]
-        info = glp_string.split(" ")
-    def get_shape_lib(self):
-        for dirname, dirnames, filenames in os.walk(self.glp_path):
-            #bar = Bar("Converting GDSII to Image", max=len(filenames))
-            for i in range(0, len(filenames)):
-                with open(os.path.join(dirname, filenames[i]),"r") as f:
-                    for line in f:
-                        if line.startwith("   RECT"):
-                            print(line.split())
-        
-
-
-
 def extract_shapes2(layout, center, target_cell, out_cell):
     sp = pya.ShapeProcessor()
     #all_layers = layout.layer_indexes()
@@ -766,3 +733,146 @@ def extract_shapes2(layout, center, target_cell, out_cell):
 
     out_cell.shapes(layout.layer(7777,0)).insert(bbox)
     return out_cell
+#import gdstk
+
+class shape_enumerator:
+    def __init__(self, glp_path, shape_level=1, core = 1000, tile_size=2000, search_step = 100, spacing = 70):
+        self.glp_path=glp_path
+        self.shape_level=shape_level
+        self.core=core
+        self.tile_size=tile_size
+        self.spacing=spacing
+        self.search_step  = search_step
+        self.shape_lib = []
+        self.polygon_coords=[]
+        self.rectangle_coords=[]
+        self.layout =pya.Layout()
+        self.mask_layer = self.layout.layer(1,0)
+        self.contour_layer = self.layout.layer(2,0)
+        self.design_layer = self.layout.layer(3,0)
+        self.rule_layer = self.layout.layer(99,0)
+        self.layout.dbu=1e-3
+        self.cell_id = 0
+        self.out_path = "./iccad13"
+        self._generate_rule_cell()
+        self.offset_x = (self.tile_size-self.core)//2
+        self.offset_y = (self.tile_size-self.core)//2
+    def get_shape_lib(self):
+        for dirname, dirnames, filenames in os.walk(self.glp_path):
+            #bar = Bar("Converting GDSII to Image", max=len(filenames))
+            for i in range(0, len(filenames)):
+                with open(os.path.join(dirname, filenames[i]),"r") as f:
+                    for line in f:
+                        if line.startswith("   RECT"):
+                            info=line.split()[3:]
+                            temp_rect = []
+                            temp_rect.append([int(info[0]), int(info[1])])
+                            temp_rect.append([int(info[0])+int(info[2]), int(info[1])+int(info[3])])
+                            self.rectangle_coords.append(np.array(temp_rect))
+
+                        if line.startswith("   PGON"):
+                            info=line.split()[3:]
+                            temp_poly = []
+                            for j in range(len(info)//2):
+                                temp_poly.append([int(info[j*2]), int(info[j*2+1])])
+                            self.polygon_coords.append(np.array(temp_poly))
+    
+
+        for i in range(len(self.rectangle_coords)):
+            shape = self.rectangle_coords[i]
+            offset_x = np.min(shape[:,0])
+            offset_y = np.min(shape[:,1])
+            shape[:,0] = shape[:,0]-offset_x
+            shape[:,1] = shape[:,1]-offset_y
+            self.rectangle_coords[i] = shape
+
+        for i in range(len(self.polygon_coords)):
+            shape = self.polygon_coords[i]
+            offset_x = np.min(shape[:,0])
+            offset_y = np.min(shape[:,1])
+            shape[:,0] = shape[:,0]-offset_x
+            shape[:,1] = shape[:,1]-offset_y
+            self.polygon_coords[i] = shape
+        self.rectangle_coords=np.unique(np.array(self.rectangle_coords),axis=0)
+        tmp_poly_coords = np.unique(np.array(self.polygon_coords[:10]),axis=0)
+
+        for i in tmp_poly_coords:
+            self.polygon_coords.append(i)
+        self.polygon_coords = self.polygon_coords[10:]
+
+
+        for shape in self.rectangle_coords:
+            #print(shape[0,0])
+            #pya.Point(1,1)
+            
+            ll=pya.Point(int(shape[0,0]),int(shape[0,1]))
+            ur=pya.Point(int(shape[1,0]),int(shape[1,1]))
+            self.shape_lib.append(pya.Polygon(pya.Box(ll,ur)))
+        
+        for shape in self.polygon_coords:
+            points=[]
+            for v in shape:
+                points.append(pya.Point(int(v[0]), int(v[1])))
+            self.shape_lib.append(pya.Polygon(points))
+
+        print(self.shape_lib)
+    def _generate_rule_cell(self):
+        self.rule_cell =  self.layout.create_cell("rule_cell")
+        tile = pya.Polygon(pya.Box(0,0,self.tile_size, self.tile_size))
+        core = pya.Box((self.tile_size-self.core)//2,(self.tile_size-self.core)//2,(self.tile_size+self.core)//2,(self.tile_size+self.core)//2)
+        tile.insert_hole(core)
+        self.rule_cell.shapes(self.rule_layer).insert(tile)
+        self.rule_cell.write(os.path.join(self.out_path, "rule_cell.oas"))
+        #print(tile)
+    def _sort_shape_lib(self, shape_lib):
+        areas = [x.bbox().area() for x in shape_lib]
+        return np.argsort(areas)[::-1]
+    def draw_layout(self):
+        #print("debug drawcell")
+        cell = self.layout.create_cell(str(self.cell_id))
+        #print(cell.bbox().width(), cell.bbox().height())
+        shape = rd.sample(self.shape_lib, 1)[0]
+        trans = pya.Trans(self.offset_x,self.offset_y)
+        shape_transformed = shape.transformed(trans)
+        cell.shapes(self.design_layer).insert(shape_transformed)
+        #for attempts in range(100):
+        #print("debug while")
+
+        shape_lib = rd.choices(self.shape_lib, k=rd.randint(5, 25))
+        sorted_id = self._sort_shape_lib(shape_lib)
+        #quit()
+        for id in sorted_id:
+            shape = shape_lib[id]
+            #print(cell.bbox().width(), cell.bbox().height())
+            for i in range(self.offset_x, self.offset_x+self.core, self.search_step):
+                for j in range(self.offset_y, self.offset_y+self.core, self.search_step):
+                    inserted = 0
+                    #print("debug pos search %g, %g"%(i,j))
+                    trans = pya.Trans(i,j)
+                    shape_transformed = shape.transformed(trans)
+                    shape_sized = shape_transformed.sized(self.spacing)
+                    violation = 0
+                    contour_iter = self.layout.begin_shapes(cell, self.design_layer)
+                    while not contour_iter.at_end():
+                        current = contour_iter.shape().polygon
+                        if current.touches(shape_sized):
+                            violation = 1
+                            break
+                        contour_iter.next()
+                    if violation == 1:
+                        continue
+                    else:
+                        cell.shapes(self.design_layer).insert(shape_transformed)
+                        inserted = 1
+                        break 
+                if inserted ==1:
+                    break
+        
+        #cell.shapes(self.design_layer).insert(shape)
+        #print(cell.bbox().width())
+
+        cell.write(os.path.join(self.out_path, "cell%g.oas"%self.cell_id))
+        self.cell_id+=1
+        cell.delete()
+
+
