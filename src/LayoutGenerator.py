@@ -844,8 +844,8 @@ class shape_enumerator:
         for id in sorted_id:
             shape = shape_lib[id]
             #print(cell.bbox().width(), cell.bbox().height())
-            for i in range(self.offset_x, self.offset_x+self.core, self.search_step):
-                for j in range(self.offset_y, self.offset_y+self.core, self.search_step):
+            for i in range(self.offset_x+1, self.offset_x+self.core, self.search_step):
+                for j in range(self.offset_y+1, self.offset_y+self.core, self.search_step):
                     inserted = 0
                     #print("debug pos search %g, %g"%(i,j))
                     trans = pya.Trans(i,j)
@@ -870,8 +870,19 @@ class shape_enumerator:
         
         #cell.shapes(self.design_layer).insert(shape)
         #print(cell.bbox().width())
-
-        cell.write(os.path.join(self.out_path, "cell%g.oas"%self.cell_id))
+        contour_iter = self.layout.begin_shapes(cell, self.design_layer)
+        tile = pya.Polygon(pya.Box(0,0,self.tile_size, self.tile_size))
+        core = pya.Box((self.tile_size-self.core)//2,(self.tile_size-self.core)//2,(self.tile_size+self.core)//2,(self.tile_size+self.core)//2)
+        tile.insert_hole(core)
+        #opc_box = out_cell.bbox_per_layer(layer_opc)
+        while not contour_iter.at_end():
+            current = contour_iter.shape().polygon
+            if current.touches(tile):
+                contour_iter.shape().delete() 
+            contour_iter.next()
+        #print("Remove Out Contour")
+        cell.shapes(self.rule_layer).insert(tile)
+        cell.write(os.path.join(self.out_path, "cell%g.gds"%self.cell_id))
         self.cell_id+=1
         cell.delete()
 

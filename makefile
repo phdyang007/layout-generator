@@ -31,5 +31,9 @@ m2_ww.oas: configs/m2_ww.csv configs/m2_ww_drc.csv ./src/m2.py
 	mkdir -p layouts
 	$(KLAYOUT) $(word 3,$+) -rd csv_file=$< -rd drc_file=$(word 2,$+) -rd dest=./layouts -rd outOAS=$@ -rd outLayer=1/0
 
+iccad13:
+	mkdir -p iccad13
+	$(KLAYOUT) src/iccad13_gen.py
+
 clean:
 	rm -rf layouts/*
