@@ -12,11 +12,8 @@ se.get_shape_lib()
 #se._generate_rule_cell()
 
 #se.search_step = 70
-#se.draw_layout()
+se._draw_lib()
 
 
-for i in range(70,200,20):
-    se.spacing=i
-    for j in range(100):
-        se.draw_layout()
+
 

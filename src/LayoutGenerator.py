@@ -760,22 +760,25 @@ class shape_enumerator:
     def get_shape_lib(self):
         for dirname, dirnames, filenames in os.walk(self.glp_path):
             #bar = Bar("Converting GDSII to Image", max=len(filenames))
+            print(filenames)
             for i in range(0, len(filenames)):
                 with open(os.path.join(dirname, filenames[i]),"r") as f:
                     for line in f:
-                        if line.startswith("   RECT"):
-                            info=line.split()[3:]
-                            temp_rect = []
-                            temp_rect.append([int(info[0]), int(info[1])])
-                            temp_rect.append([int(info[0])+int(info[2]), int(info[1])+int(info[3])])
-                            self.rectangle_coords.append(np.array(temp_rect))
+                        if line.startswith(" "):
+                            _info=line.split()
+                            if _info[0]=="RECT":
+                                info=_info[3:]
+                                temp_rect = []
+                                temp_rect.append([int(info[0]), int(info[1])])
+                                temp_rect.append([int(info[0])+int(info[2]), int(info[1])+int(info[3])])
+                                self.rectangle_coords.append(np.array(temp_rect))
 
-                        if line.startswith("   PGON"):
-                            info=line.split()[3:]
-                            temp_poly = []
-                            for j in range(len(info)//2):
-                                temp_poly.append([int(info[j*2]), int(info[j*2+1])])
-                            self.polygon_coords.append(np.array(temp_poly))
+                            if _info[0]=="PGON":
+                                info=_info[3:]
+                                temp_poly = []
+                                for j in range(len(info)//2):
+                                    temp_poly.append([int(info[j*2]), int(info[j*2+1])])
+                                self.polygon_coords.append(np.array(temp_poly))
     
 
         for i in range(len(self.rectangle_coords)):
@@ -827,6 +830,17 @@ class shape_enumerator:
     def _sort_shape_lib(self, shape_lib):
         areas = [x.bbox().area() for x in shape_lib]
         return np.argsort(areas)[::-1]
+    def _draw_lib(self):
+        cell = self.layout.create_cell("libs")
+        layer = self.layout.layer(100,0)
+        i=0
+        for shape in self.shape_lib:
+            tshape = shape.transformed(pya.Trans(1000*i, 0))
+            cell.shapes(layer).insert(tshape)
+            i+=1
+        
+        cell.write("./iccad13/lib.oas")
+ 
     def draw_layout(self):
         #print("debug drawcell")
         cell = self.layout.create_cell(str(self.cell_id))
@@ -838,11 +852,12 @@ class shape_enumerator:
         #for attempts in range(100):
         #print("debug while")
 
-        shape_lib = rd.choices(self.shape_lib, k=rd.randint(5, 25))
-        sorted_id = self._sort_shape_lib(shape_lib)
+        #shape_lib = rd.choices(self.shape_lib, k=rd.randint(5, 25))
+        #print(shape_lib)
+        sorted_id = self._sort_shape_lib(self.shape_lib)
         #quit()
         for id in sorted_id:
-            shape = shape_lib[id]
+            shape = self.shape_lib[id]
             #print(cell.bbox().width(), cell.bbox().height())
             for i in range(self.offset_x+1, self.offset_x+self.core, self.search_step):
                 for j in range(self.offset_y+1, self.offset_y+self.core, self.search_step):
