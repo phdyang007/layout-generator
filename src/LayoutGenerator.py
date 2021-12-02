@@ -788,7 +788,7 @@ class shape_enumerator:
             shape[:,0] = shape[:,0]-offset_x
             shape[:,1] = shape[:,1]-offset_y
             self.rectangle_coords[i] = shape
-
+        self.rectangle_coords=np.unique(np.array(self.rectangle_coords),axis=0)
         for i in range(len(self.polygon_coords)):
             shape = self.polygon_coords[i]
             offset_x = np.min(shape[:,0])
@@ -796,17 +796,25 @@ class shape_enumerator:
             shape[:,0] = shape[:,0]-offset_x
             shape[:,1] = shape[:,1]-offset_y
             self.polygon_coords[i] = shape
-        self.rectangle_coords=np.unique(np.array(self.rectangle_coords),axis=0)
-        tmp_poly_coords = np.unique(np.array(self.polygon_coords[:10]),axis=0)
 
-        for i in tmp_poly_coords:
-            self.polygon_coords.append(i)
-        self.polygon_coords = self.polygon_coords[10:]
+
+        v_counts = [len(x) for x in self.polygon_coords]
+        v_unique_counts = np.unique(v_counts)
+        tmp_poly_coords = []
+        for vc in v_unique_counts:
+            idxs = np.where(v_counts==vc)[0]
+            _tmp_poly_coords=np.unique(np.array([self.polygon_coords[x] for x in idxs]), axis=0)
+
+            for coord in _tmp_poly_coords:
+                tmp_poly_coords.append(coord)
+
+        self.polygon_coords=tmp_poly_coords
+
+
 
 
         for shape in self.rectangle_coords:
-            #print(shape[0,0])
-            #pya.Point(1,1)
+
             
             ll=pya.Point(int(shape[0,0]),int(shape[0,1]))
             ur=pya.Point(int(shape[1,0]),int(shape[1,1]))
@@ -852,12 +860,12 @@ class shape_enumerator:
         #for attempts in range(100):
         #print("debug while")
 
-        #shape_lib = rd.choices(self.shape_lib, k=rd.randint(5, 25))
+        shape_lib = rd.choices(self.shape_lib, k=rd.randint(5, 25))
         #print(shape_lib)
-        sorted_id = self._sort_shape_lib(self.shape_lib)
+        sorted_id = self._sort_shape_lib(shape_lib)
         #quit()
         for id in sorted_id:
-            shape = self.shape_lib[id]
+            shape = shape_lib[id]
             #print(cell.bbox().width(), cell.bbox().height())
             for i in range(self.offset_x+1, self.offset_x+self.core, self.search_step):
                 for j in range(self.offset_y+1, self.offset_y+self.core, self.search_step):
