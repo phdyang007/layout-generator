@@ -760,7 +760,7 @@ class shape_enumerator:
     def get_shape_lib(self):
         for dirname, dirnames, filenames in os.walk(self.glp_path):
             #bar = Bar("Converting GDSII to Image", max=len(filenames))
-            print(filenames)
+            #print(filenames)
             for i in range(0, len(filenames)):
                 with open(os.path.join(dirname, filenames[i]),"r") as f:
                     for line in f:
@@ -779,7 +779,7 @@ class shape_enumerator:
                                 for j in range(len(info)//2):
                                     temp_poly.append([int(info[j*2]), int(info[j*2+1])])
                                 self.polygon_coords.append(np.array(temp_poly))
-    
+
 
         for i in range(len(self.rectangle_coords)):
             shape = self.rectangle_coords[i]
