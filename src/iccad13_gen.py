@@ -15,5 +15,11 @@ se.get_shape_lib()
 se._draw_lib()
 
 
+for i in range(70, 150, 20):
+    se.spacing=i
+    for j in range(10000):
+        se.draw_layout()
+
+
 
 

@@ -760,7 +760,7 @@ class shape_enumerator:
     def get_shape_lib(self):
         for dirname, dirnames, filenames in os.walk(self.glp_path):
             #bar = Bar("Converting GDSII to Image", max=len(filenames))
-            print(filenames)
+            #print(filenames)
             for i in range(0, len(filenames)):
                 with open(os.path.join(dirname, filenames[i]),"r") as f:
                     for line in f:
@@ -779,7 +779,7 @@ class shape_enumerator:
                                 for j in range(len(info)//2):
                                     temp_poly.append([int(info[j*2]), int(info[j*2+1])])
                                 self.polygon_coords.append(np.array(temp_poly))
-    
+
 
         for i in range(len(self.rectangle_coords)):
             shape = self.rectangle_coords[i]
@@ -796,6 +796,11 @@ class shape_enumerator:
             shape[:,0] = shape[:,0]-offset_x
             shape[:,1] = shape[:,1]-offset_y
             self.polygon_coords[i] = shape
+        tmp_length=[len(x) for x in self.polygon_coords]
+        tmp_id=np.argsort(tmp_length)
+        sort_length=np.sort(tmp_length)
+        print(tmp_id)
+        print(sort_length)
         self.rectangle_coords=np.unique(np.array(self.rectangle_coords),axis=0)
         tmp_poly_coords = np.unique(np.array(self.polygon_coords[:10]),axis=0)
 
@@ -852,12 +857,12 @@ class shape_enumerator:
         #for attempts in range(100):
         #print("debug while")
 
-        #shape_lib = rd.choices(self.shape_lib, k=rd.randint(5, 25))
+        shape_lib = rd.choices(self.shape_lib, k=rd.randint(5, 25))
         #print(shape_lib)
-        sorted_id = self._sort_shape_lib(self.shape_lib)
+        sorted_id = self._sort_shape_lib(shape_lib)
         #quit()
         for id in sorted_id:
-            shape = self.shape_lib[id]
+            shape = shape_lib[id]
             #print(cell.bbox().width(), cell.bbox().height())
             for i in range(self.offset_x+1, self.offset_x+self.core, self.search_step):
                 for j in range(self.offset_y+1, self.offset_y+self.core, self.search_step):
