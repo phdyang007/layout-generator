@@ -3,6 +3,7 @@ sys.path.append('./src')
 
 from LayoutGenerator import *
 import os
+from progress.bar import Bar
 
 se = shape_enumerator("./data/iccad13_base")
 
@@ -12,13 +13,19 @@ se.get_shape_lib()
 #se._generate_rule_cell()
 
 #se.search_step = 70
-se._draw_lib()
+#se._draw_lib()
 
 
-for i in range(70, 150, 20):
+
+clip_num_per_density=10000
+for i in range(40, 100, 20):
     se.spacing=i
-    for pc in range(10):
+    bar = Bar("enumerating layouts spacing %g"%i, max=clip_num_per_density)
+    for pc in range(clip_num_per_density):
         se.draw_layout()
+        bar.next()
+    
+    bar.finish()
 
 
 

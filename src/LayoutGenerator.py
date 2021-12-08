@@ -1,3 +1,14 @@
+###############################################
+#
+#    Toolkits for Layout Generation
+#    By  Haoyu Yang, NVIDIA Research
+#    Contact: haoyuy@nvidia.com
+#    Last Update: 12/06/2021
+#
+#
+###############################################
+
+
 try:
     import pya
 except:
@@ -736,7 +747,7 @@ def extract_shapes2(layout, center, target_cell, out_cell):
 #import gdstk
 
 class shape_enumerator:
-    def __init__(self, glp_path, shape_level=1, core = 1000, tile_size=2000, search_step = 100, spacing = 70):
+    def __init__(self, glp_path, shape_level=1, core = 1000, tile_size=2000, search_step = 100, spacing = 40):
         self.glp_path=glp_path
         self.shape_level=shape_level
         self.core=core
@@ -849,28 +860,20 @@ class shape_enumerator:
         
         cell.write("./iccad13/lib.oas")
  
-    def draw_layout(self):
-        #print("debug drawcell")
+    def draw_layout(self, dumpglp=True, glpoffset=500):
         cell = self.layout.create_cell(str(self.cell_id))
-        #print(cell.bbox().width(), cell.bbox().height())
         shape = rd.sample(self.shape_lib, 1)[0]
         trans = pya.Trans(self.offset_x,self.offset_y)
         shape_transformed = shape.transformed(trans)
         cell.shapes(self.design_layer).insert(shape_transformed)
-        #for attempts in range(100):
-        #print("debug while")
-
-        shape_lib = rd.choices(self.shape_lib, k=rd.randint(5, 25))
-        #print(shape_lib)
+        shape_lib = rd.choices(self.shape_lib, k=rd.randint(7, 15))
         sorted_id = self._sort_shape_lib(shape_lib)
-        #quit()
+ 
         for id in sorted_id:
             shape = shape_lib[id]
-            #print(cell.bbox().width(), cell.bbox().height())
             for i in range(self.offset_x+1, self.offset_x+self.core, self.search_step):
                 for j in range(self.offset_y+1, self.offset_y+self.core, self.search_step):
                     inserted = 0
-                    #print("debug pos search %g, %g"%(i,j))
                     trans = pya.Trans(i,j)
                     shape_transformed = shape.transformed(trans)
                     shape_sized = shape_transformed.sized(self.spacing)
@@ -890,23 +893,46 @@ class shape_enumerator:
                         break 
                 if inserted ==1:
                     break
-        
-        #cell.shapes(self.design_layer).insert(shape)
-        #print(cell.bbox().width())
+    
+
         contour_iter = self.layout.begin_shapes(cell, self.design_layer)
         tile = pya.Polygon(pya.Box(0,0,self.tile_size, self.tile_size))
         core = pya.Box((self.tile_size-self.core)//2,(self.tile_size-self.core)//2,(self.tile_size+self.core)//2,(self.tile_size+self.core)//2)
         tile.insert_hole(core)
-        #opc_box = out_cell.bbox_per_layer(layer_opc)
         while not contour_iter.at_end():
             current = contour_iter.shape().polygon
             if current.touches(tile):
                 contour_iter.shape().delete() 
             contour_iter.next()
-        #print("Remove Out Contour")
         cell.shapes(self.rule_layer).insert(tile)
-        cell.write(os.path.join(self.out_path, "cell%g.gds"%self.cell_id))
+        cell.write(os.path.join(self.out_path, "cell%g.oas"%self.cell_id))
+        if(dumpglp):
+            with open(os.path.join(self.out_path, "cell%g.glp"%self.cell_id), "w") as glp:
+                glp.write("BEGIN\n")
+                glp.write("EQUV  1  1000  MICRON  +X,+Y\n")
+                glp.write("CNAME Temp_Top\n")
+                glp.write("LEVEL M1\n\n")
+                glp.write("CELL Temp_Top PRIME\n")
+                contour_iter = self.layout.begin_shapes(cell, self.design_layer)
+                while not contour_iter.at_end():
+                    current = contour_iter.shape().polygon
+                    if(current.is_box()):
+                        box = current.bbox()
+                        glp.write("   RECT N M1 %g %g %g %g\n"%(box.left-glpoffset, box.bottom-glpoffset, box.width(), box.height()))
+                    else:
+                        polygon = current
+                        glp.write("   PGON N M1 ")
+                        for point in polygon.each_point_hull():
+                            glp.write("%g %g "%(point.x-glpoffset, point.y-glpoffset))
+                        glp.write("\n")
+                    contour_iter.next()
+                glp.write("ENDMSG\n")
+
         self.cell_id+=1
         cell.delete()
+    
+    def draw_glp(self, glp_offset=500):
+
+        pass
 
 
