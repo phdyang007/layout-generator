@@ -75,7 +75,7 @@ Return:
 '''
 
 
-def draw_wire_row(cell, layer, cd, min_length, max_length, min_t2t, max_t2t, t2t_grid, max_x, location=np.array([0, 0]), enclosure=0):
+def draw_wire_row(cell, layer, cd, min_length, max_length, min_t2t, max_t2t, t2t_grid, max_x, location=np.array([0, 0]), enclosure=0, stoc=0):
     offset_x = location[0]
     offset_y = location[1]
     total_x = 0
@@ -97,13 +97,14 @@ def draw_wire_row(cell, layer, cd, min_length, max_length, min_t2t, max_t2t, t2t
 
         wire_right = wire_left + wire_length
         wire_upper = wire_lower + cd
-        # if wire_right > max_x:
-        #    break
+
 
         wire_ll = pya.Point(int(wire_left+offset_x), int(wire_lower+offset_y))
         wire_ur = pya.Point(int(wire_right+offset_x), int(wire_upper+offset_y))
         wire = pya.Box(wire_ll, wire_ur)
-        cell.shapes(layer).insert(wire)
+        token = rd.uniform(0,1)
+        if token > stoc:
+            cell.shapes(layer).insert(wire)
         if enclosure != 0:
             ast_wire_ll = pya.Point(
                 wire_left+offset_x+enclosure, wire_lower+offset_y)
@@ -225,9 +226,10 @@ def draw_wire_column(cell, layer, cd, min_length, max_length, min_t2t, max_t2t, 
 
         wire_upper = wire_lower + wire_length
         wire_right = wire_left + cd
-        # print(wire_left+offset_x,wire_lower+offset_y,wire_lower,wire_right)
-        wire_ll = pya.Point(wire_left+offset_x, wire_lower+offset_y)
-        wire_ur = pya.Point(wire_right+offset_x, wire_upper+offset_y)
+        #print(wire_left+offset_x,wire_lower+offset_y,wire_upper,wire_right)
+        #print()
+        wire_ll = pya.Point(int(wire_left+offset_x), int(wire_lower+offset_y))
+        wire_ur = pya.Point(int(wire_right+offset_x), int(wire_upper+offset_y))
         wire = pya.Box(wire_ll, wire_ur)
         cell.shapes(layer).insert(wire)
         # print wire_ll, wire_ur
@@ -747,7 +749,7 @@ def extract_shapes2(layout, center, target_cell, out_cell):
 #import gdstk
 
 class shape_enumerator:
-    def __init__(self, glp_path, shape_level=1, core = 1000, tile_size=2000, search_step = 100, spacing = 40):
+    def __init__(self, glp_path, shape_level=1, core = 970, tile_size=2000, search_step = 100, spacing = 40):
         self.glp_path=glp_path
         self.shape_level=shape_level
         self.core=core
@@ -866,7 +868,7 @@ class shape_enumerator:
         trans = pya.Trans(self.offset_x,self.offset_y)
         shape_transformed = shape.transformed(trans)
         cell.shapes(self.design_layer).insert(shape_transformed)
-        shape_lib = rd.choices(self.shape_lib, k=rd.randint(7, 15))
+        shape_lib = rd.choices(self.shape_lib, k=20)
         sorted_id = self._sort_shape_lib(shape_lib)
  
         for id in sorted_id:
@@ -904,6 +906,9 @@ class shape_enumerator:
             if current.touches(tile):
                 contour_iter.shape().delete() 
             contour_iter.next()
+        
+        if cell.is_empty():
+            return -1
         cell.shapes(self.rule_layer).insert(tile)
         cell.write(os.path.join(self.out_path, "cell%g.oas"%self.cell_id))
         if(dumpglp):
@@ -930,9 +935,67 @@ class shape_enumerator:
 
         self.cell_id+=1
         cell.delete()
-    
+        return 0
     def draw_glp(self, glp_offset=500):
 
         pass
 
 
+class layout_parser:
+    def __init__(self, type, path):
+        self.type=type 
+        self.path=path 
+        self.layout=pya.Layout() 
+        self.status=type
+        ######glp##########
+        self.shape_lib = [] 
+        self.polygon_coords=[]
+        self.rectangle_coords=[]
+        ######glp##########
+        self._load_layout()
+    def _load_layout(self):
+        if self.type=="glp":
+
+            with open(self.path,"r") as f:
+                for line in f:
+                    if line.startswith(" "):
+                        _info=line.split()
+                        if _info[0]=="RECT":
+                            info=_info[3:]
+                            temp_rect = []
+                            temp_rect.append([int(info[0]), int(info[1])])
+                            temp_rect.append([int(info[0])+int(info[2]), int(info[1])+int(info[3])])
+                            self.rectangle_coords.append(np.array(temp_rect))
+                        if _info[0]=="PGON":
+                            info=_info[3:]
+                            temp_poly = []
+                            for j in range(len(info)//2):
+                                temp_poly.append([int(info[j*2]), int(info[j*2+1])])
+                            self.polygon_coords.append(np.array(temp_poly))
+            if self.rectangle_coords:
+                for shape in self.rectangle_coords:              
+                    ll=pya.Point(int(shape[0,0]),int(shape[0,1]))
+                    ur=pya.Point(int(shape[1,0]),int(shape[1,1]))
+                    self.shape_lib.append(pya.Polygon(pya.Box(ll,ur)))
+            elif self.polygon_coords:
+                for shape in self.polygon_coords:
+                    points=[]
+                    for v in shape:
+                        points.append(pya.Point(int(v[0]), int(v[1])))
+                    self.shape_lib.append(pya.Polygon(points))
+            else:
+                print("The design is empty! %s"%self.path)
+        
+        if self.type=="oasis" or self.type=="gdsii":
+            self.layout.read(self.path)
+    def to_glp(self, layer, dtype, offset):
+        target_cell = self.layout.top_cell()
+        target_layer = self.layout.layer(layer, dtype)
+        #TODO 
+
+
+
+
+
+
+            

@@ -5,6 +5,7 @@ import random as rd
 import os
 import time
 import sys
+
 sys.path.append('./src')
 from LayoutGenerator import *
 if __name__ == "__main__":  
@@ -222,5 +223,32 @@ if __name__ == "__main__":
         layout.delete_layer(l_access_merged_w_forbidden)
 
         cell.write(os.path.join(dest, cellname+'.gds'))
+
+
+        '''write out glp'''
+        if(True):
+            with open(os.path.join(dest, cellname+'.glp'), "w") as glp:
+                glp.write("BEGIN\n")
+                glp.write("EQUV  1  1000  MICRON  +X,+Y\n")
+                glp.write("CNAME Temp_Top\n")
+                glp.write("LEVEL M1\n\n")
+                glp.write("CELL Temp_Top PRIME\n")
+                contour_iter = layout.begin_shapes(cell, l_via1)
+                viabbox = cell.bbox_per_layer(l_via1)
+                glpoffset_x = viabbox.left -70 + rd.randint(-400, 400)
+                glpoffset_y = viabbox.bottom -70 + rd.randint(-400, 400)
+                while not contour_iter.at_end():
+                    current = contour_iter.shape().polygon
+                    if(current.is_box()):
+                        box = current.bbox()
+                        glp.write("   RECT N M1 %g %g %g %g\n"%(box.left-glpoffset_x, box.bottom-glpoffset_y, box.width(), box.height()))
+                    else:
+                        polygon = current
+                        glp.write("   PGON N M1 ")
+                        for point in polygon.each_point_hull():
+                            glp.write("%g %g "%(point.x-glpoffset_x, point.y-glpoffset_y))
+                        glp.write("\n")
+                    contour_iter.next()
+                glp.write("ENDMSG\n")
         layout.clear()
     #topcell.write(outOAS)

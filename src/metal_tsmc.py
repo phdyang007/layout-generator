@@ -54,12 +54,12 @@ if __name__ == "__main__":
         init_loc=[0,0]
 
         l_m2 = layout.layer(outLayerNum, outLayerDT, "M2")
-        for j in range(init_loc[1], total_y-wire_cd + init_loc[1], track_pitch):
-            location = np.array([init_loc[0], j])
-            draw_wire_row(cell, l_m2, wire_cd,
+        for i in range(init_loc[0], total_x-wire_cd + init_loc[0], track_pitch):
+            location = np.array([i, init_loc[1]])
+            draw_wire_column(cell, l_m2, wire_cd,
                             min_length, max_length,
                             min_t2t, max_t2t, t2t_grid,
-                            total_x, location, stoc=0.6)
+                            total_y, location)
 
 
         l_bb = layout.layer(2, 0, "bounding_box")
@@ -69,33 +69,10 @@ if __name__ == "__main__":
         bbur = pya.Point(origin[0]+total_x, origin[1]+total_y)
         cell.shapes(l_bb).insert(pya.Box(bbll, bbur))
 
-        cellpath = cellname+'.gds'
+        cellpath = cellname+'.oas'
         cell.write(os.path.join(dest, cellpath))
 
 
-        with open(os.path.join(dest, cellname+'.glp'), "w") as glp:
-            glp.write("BEGIN\n")
-            glp.write("EQUV  1  1000  MICRON  +X,+Y\n")
-            glp.write("CNAME Temp_Top\n")
-            glp.write("LEVEL M1\n\n")
-            glp.write("CELL Temp_Top PRIME\n")
-            contour_iter = layout.begin_shapes(cell, l_m2)
-            viabbox = cell.bbox_per_layer(l_m2)
-            glpoffset_x = viabbox.left -70 + random.randint(-400, 400)
-            glpoffset_y = viabbox.bottom -70 + random.randint(-400, 400)
-            while not contour_iter.at_end():
-                current = contour_iter.shape().polygon
-                if(current.is_box()):
-                    box = current.bbox()
-                    glp.write("   RECT N M1 %g %g %g %g\n"%(box.left-glpoffset_x, box.bottom-glpoffset_y, box.width(), box.height()))
-                else:
-                    polygon = current
-                    glp.write("   PGON N M1 ")
-                    for point in polygon.each_point_hull():
-                        glp.write("%g %g "%(point.x-glpoffset_x, point.y-glpoffset_y))
-                    glp.write("\n")
-                contour_iter.next()
-            glp.write("ENDMSG\n")
 
 
     
