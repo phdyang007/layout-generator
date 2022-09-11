@@ -910,7 +910,7 @@ class shape_enumerator:
         if cell.is_empty():
             return -1
         cell.shapes(self.rule_layer).insert(tile)
-        cell.write(os.path.join(self.out_path, "cell%g.oas"%self.cell_id))
+        cell.write(os.path.join(self.out_path, "cell%g.gds"%self.cell_id))
         if(dumpglp):
             with open(os.path.join(self.out_path, "cell%g.glp"%self.cell_id), "w") as glp:
                 glp.write("BEGIN\n")

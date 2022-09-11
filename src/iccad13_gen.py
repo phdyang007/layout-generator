@@ -17,7 +17,7 @@ se.get_shape_lib()
 
 
 
-clip_num_per_density=1000
+clip_num_per_density=4200
 for i in range(40, 80, 10):
     se.spacing=i
     bar = Bar("enumerating layouts spacing %g"%i, max=clip_num_per_density)
