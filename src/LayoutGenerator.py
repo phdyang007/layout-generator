@@ -958,6 +958,7 @@ class layout_parser:
 
             with open(self.path,"r") as f:
                 for line in f:
+                    print(line)
                     if line.startswith(" "):
                         _info=line.split()
                         if _info[0]=="RECT":
@@ -977,14 +978,13 @@ class layout_parser:
                     ll=pya.Point(int(shape[0,0]),int(shape[0,1]))
                     ur=pya.Point(int(shape[1,0]),int(shape[1,1]))
                     self.shape_lib.append(pya.Polygon(pya.Box(ll,ur)))
-            elif self.polygon_coords:
+            if self.polygon_coords:
                 for shape in self.polygon_coords:
                     points=[]
                     for v in shape:
                         points.append(pya.Point(int(v[0]), int(v[1])))
                     self.shape_lib.append(pya.Polygon(points))
-            else:
-                print("The design is empty! %s"%self.path)
+
         
         if self.type=="oasis" or self.type=="gdsii":
             self.layout.read(self.path)
@@ -992,6 +992,16 @@ class layout_parser:
         target_cell = self.layout.top_cell()
         target_layer = self.layout.layer(layer, dtype)
         #TODO 
+
+    def glp2gdsii(self, layer, dtype):
+        target_layer = self.layout.layer(layer, dtype)
+        target_cell = self.layout.create_cell("top")
+        for shape in self.shape_lib:
+            target_cell.shapes(target_layer).insert(shape)
+
+        target_cell.write(self.path+".gds")
+
+
 
 
 
